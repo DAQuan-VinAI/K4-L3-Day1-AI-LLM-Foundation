@@ -69,8 +69,6 @@ def call_openai(
         # (perf_counter là đồng hồ đo khoảng thời gian, độ phân giải cao trên
         #  mọi hệ điều hành; time.time() trên Windows có thể trả về 0.0)
     """
-    # TODO: import OpenAI, tạo client, gọi chat.completions.create,
-    #       đo start/end time, trả về (response_text, latency)
     from openai import OpenAI
     
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -92,7 +90,6 @@ def call_openai(
     response_text = response.choices[0].message.content
     
     return response_text, latency_seconds
-    # raise NotImplementedError("Implement call_openai")
 
 
 # ---------------------------------------------------------------------------
@@ -113,9 +110,7 @@ def call_openai_mini(
     Gợi ý:
         Tái sử dụng call_openai() với model=OPENAI_MINI_MODEL — 1 dòng code.
     """
-    # TODO: gọi call_openai với model=OPENAI_MINI_MODEL
     return call_openai(prompt=prompt, model=OPENAI_MINI_MODEL, temperature=temperature,top_p=top_p,max_tokens=max_tokens)
-    raise NotImplementedError("Implement call_openai_mini")
 
 
 # ---------------------------------------------------------------------------
@@ -138,7 +133,6 @@ def compare_models(prompt: str) -> dict:
                * PRICING_PER_1K_TOKENS["gpt-4o"]["output"]
         (0.75 từ ≈ 1 token — ước lượng thô; Part 2 sẽ tính chính xác hơn)
     """
-    # TODO: gọi call_openai và call_openai_mini, ghép dict kết quả
     gpt4o_response, gpt4o_latency = call_openai(prompt)
     mini_response, mini_latency = call_openai_mini(prompt)
 
@@ -151,7 +145,6 @@ def compare_models(prompt: str) -> dict:
         "mini_latency": mini_latency,
         "gpt4o_cost_estimate": cost
     }
-    raise NotImplementedError("Implement compare_models")
 
 
 # ===========================================================================
@@ -186,7 +179,6 @@ def chat_with_system_prompt(
             {"role": "user", "content": user_prompt},
         ]
     """
-    # TODO: giống call_openai nhưng messages có thêm phần tử role="system"
     from openai import OpenAI
     
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -210,8 +202,6 @@ def chat_with_system_prompt(
     response_text = response.choices[0].message.content
     
     return response_text, latency_seconds
-        
-    raise NotImplementedError("Implement chat_with_system_prompt")
 
 
 # ---------------------------------------------------------------------------
@@ -237,14 +227,12 @@ def count_tokens(text: str, model: str = OPENAI_MODEL) -> int:
         try/except — nếu lỗi (offline, model lạ), dùng ước lượng dự phòng:
         max(1, len(text) // 4)   (trung bình 1 token ≈ 4 ký tự)
     """
-    # TODO: dùng tiktoken để đếm token, có fallback khi lỗi
     try:
         import tiktoken
         enc = tiktoken.encoding_for_model(model)
         return len(enc.encode(text))
     except Exception:
         return max(1, len(text) // 4)
-    raise NotImplementedError("Implement count_tokens")
 
 
 # ---------------------------------------------------------------------------
@@ -270,7 +258,6 @@ def estimate_cost(prompt: str, response: str, model: str = OPENAI_MODEL) -> dict
         (.get với fallback: model không có trong bảng giá — ví dụ model NIM
          miễn phí — thì lấy giá gpt-4o làm tham chiếu học tập)
     """
-    # TODO: đếm token prompt/response, tra bảng giá, trả về dict 5 key
     input_tokens = count_tokens(prompt, model=model)
     output_tokens = count_tokens(response, model=model)
     pricing = PRICING_PER_1K_TOKENS.get(model, PRICING_PER_1K_TOKENS["gpt-4o"])
@@ -284,7 +271,6 @@ def estimate_cost(prompt: str, response: str, model: str = OPENAI_MODEL) -> dict
         "output_cost": output_cost,
         "total_cost": input_cost + output_cost
     }
-    raise NotImplementedError("Implement estimate_cost")
 
 
 # ===========================================================================
@@ -312,7 +298,6 @@ def streaming_chatbot() -> None:
         - Sau mỗi lượt, thêm phản hồi assistant vào history.
         - Cắt history còn 3 lượt cuối (6 message): history = history[-6:]
     """
-    # TODO: vòng lặp while, đọc input, stream phản hồi, duy trì history
     from openai import OpenAI
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -335,7 +320,6 @@ def streaming_chatbot() -> None:
         history.append({"role": "assistant", "content": reply})
         history = history[-6:]
         
-
 # ---------------------------------------------------------------------------
 # Task 3.2 — Retry với exponential backoff
 # ---------------------------------------------------------------------------
@@ -359,7 +343,6 @@ def retry_with_backoff(
     Raises:
         Exception cuối cùng của fn() sau khi hết số lần thử.
     """
-    # TODO: vòng lặp retry với exponential backoff
     for attempt in range(max_retries + 1):
         try:
             return fn()
@@ -367,7 +350,6 @@ def retry_with_backoff(
             if attempt == max_retries:
                 raise
             time.sleep(base_delay * (2 ** attempt))
-    raise NotImplementedError("Implement retry_with_backoff")
 
 
 # ===========================================================================
@@ -425,7 +407,6 @@ def run_assistant(
         return {"num_turns": num_turns, "total_tokens": total_tokens,
                 "total_cost": total_cost, "history": history}
     """
-    # TODO: triển khai theo khung sườn trong docstring
     
     if get_input is None:
         get_input = input
@@ -471,26 +452,126 @@ def run_assistant(
 # BONUS (không bắt buộc — cho bạn nào xong sớm)
 # ===========================================================================
 def batch_compare(prompts: list[str]) -> list[dict]:
-    """
-    Chạy compare_models cho từng prompt trong list.
+    """Chạy compare_models cho từng prompt trong list.
 
     Returns:
         List các dict — mỗi dict là kết quả compare_models kèm thêm
         key "prompt" chứa prompt gốc.
     """
-    # TODO (bonus): lặp qua prompts, gọi compare_models, thêm key "prompt"
-    raise NotImplementedError("Implement batch_compare")
+    results = []
+    for prompt in prompts:
+        # Gọi hàm so sánh đã có ở các phần trước
+        res = compare_models(prompt)
+
+        # Lưu lại prompt gốc kèm kết quả
+        item = dict(res)
+        item["prompt"] = prompt
+        results.append(item)
+
+    return results
 
 
 def format_comparison_table(results: list[dict]) -> str:
-    """
-    Định dạng kết quả batch_compare thành bảng text dễ đọc.
+    """Định dạng kết quả batch_compare thành bảng text dễ đọc.
 
     Cột: Prompt | GPT-4o Response | Mini Response | GPT-4o Latency | Mini Latency
     Gợi ý: cắt text dài còn 40 ký tự cho dễ nhìn.
     """
-    # TODO (bonus): dựng chuỗi bảng và trả về
-    raise NotImplementedError("Implement format_comparison_table")
+
+    def _truncate(text: str, max_len: int = 40) -> str:
+        # Thay thế dòng mới thành khoảng trắng để bảng không bị vỡ dòng
+        clean_text = str(text).replace("\n", " ").strip()
+        if len(clean_text) > max_len:
+            return clean_text[: max_len - 3] + "..."
+        return clean_text
+
+    def _format_latency(val) -> str:
+        if val is None:
+            return "N/A"
+        try:
+            return f"{float(val):.2f}s"
+        except (ValueError, TypeError):
+            return str(val)
+
+    # Tiêu đề bảng
+    headers = [
+        "Prompt",
+        "GPT-4o Response",
+        "Mini Response",
+        "GPT-4o Latency",
+        "Mini Latency",
+    ]
+
+    rows = []
+    for r in results:
+        prompt_text = _truncate(r.get("prompt", ""))
+
+        # Lấy response và latency linh hoạt theo các định dạng dict thường gặp
+        # (dạng lồng: r["gpt_4o"]["response"] hoặc dạng phẳng: r["gpt_4o_response"])
+        gpt4o_data = r.get("gpt_4o") or r.get("gpt-4o") or {}
+        mini_data = (
+            r.get("gpt_4o_mini")
+            or r.get("gpt-4o-mini")
+            or r.get("mini")
+            or {}
+        )
+
+        gpt4o_resp = (
+            gpt4o_data.get("response")
+            if isinstance(gpt4o_data, dict)
+            else r.get("gpt_4o_response", "")
+        )
+        mini_resp = (
+            mini_data.get("response")
+            if isinstance(mini_data, dict)
+            else r.get("mini_response", "")
+        )
+
+        gpt4o_lat = (
+            gpt4o_data.get("latency")
+            if isinstance(gpt4o_data, dict)
+            else r.get("gpt_4o_latency", "")
+        )
+        mini_lat = (
+            mini_data.get("latency")
+            if isinstance(mini_data, dict)
+            else r.get("mini_latency", "")
+        )
+
+        rows.append(
+            [
+                prompt_text,
+                _truncate(gpt4o_resp or ""),
+                _truncate(mini_resp or ""),
+                _format_latency(gpt4o_lat),
+                _format_latency(mini_lat),
+            ]
+        )
+
+    # Tính độ rộng cột tự động dựa trên nội dung
+    col_widths = [len(h) for h in headers]
+    for row in rows:
+        for i, val in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(val))
+
+    # Dựng chuỗi kết quả dạng bảng Markdown/ASCII
+    header_line = (
+        "| "
+        + " | ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers))
+        + " |"
+    )
+    separator_line = (
+        "|-" + "-|-".join("-" * col_widths[i] for i in range(len(headers))) + "-|"
+    )
+
+    data_lines = [
+        "| "
+        + " | ".join(row[i].ljust(col_widths[i]) for i in range(len(headers)))
+        + " |"
+        for row in rows
+    ]
+
+    return "\n".join([header_line, separator_line] + data_lines)
 
 
 # ---------------------------------------------------------------------------
